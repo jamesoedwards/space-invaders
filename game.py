@@ -8,6 +8,7 @@ wn.title("Space Invaders")
 #Register the shapes
 turtle.register_shape("invader.gif")
 turtle.register_shape("player.gif")
+turtle.register_shape("ufo.gif")
 
 #Draw ground
 ground_pen = turtle.Turtle()
@@ -48,7 +49,6 @@ score_pen.hideturtle()
 
 #Create the player turtle
 player = turtle.Turtle()
-player.color("blue")
 player.shape("player.gif")
 player.penup()
 player.speed(0)
@@ -56,6 +56,14 @@ player.setposition(0, -250)
 player.setheading(90)
 
 playerspeed = 15
+
+#Create UFO turtle
+ufo = turtle.Turtle()
+ufo.shape("ufo.gif")
+ufo.penup()
+ufo.speed(0)
+ufo.setposition(0,250)
+ufo.setheading(90)
 
 #Choose a number of enemies
 number_of_enemies = 10
@@ -184,7 +192,7 @@ while playing:
             for e in enemies:
                 e.hideturtle()
             wn.clearscreen()
-            wn.bgpic("gameover.png")
+            wn.bgpic("endscreen.png")
             playing=False
 
         
