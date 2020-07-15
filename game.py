@@ -14,11 +14,15 @@ class Game:
         self.screen = pygame.display.set_mode((width, height))
         self.clock = pygame.time.Clock()
         done = False
+        alien_speed = 0.05
 
         hero = Hero(self, width / 2, height - 20)
-        generator = Generator(self)
+        Generator(self, alien_speed)
         rocket = None
 
+        wave_rate = 6000
+        timer = 0
+        dt = 0
         while not done:
             if len(self.aliens) == 0:
                 self.displayText("VICTORY ACHIEVED")
@@ -36,13 +40,17 @@ class Game:
                     self.rockets.append(Rocket(self, hero.x+11, hero.y+3))
 
             pygame.display.flip()
-            self.clock.tick(60)
+            dt = self.clock.tick(60)
             self.screen.fill((0, 0, 0))
+            timer += dt
+            if timer % wave_rate == 0:
+                alien_speed += 0.01
+                Generator(self, alien_speed)
 
             for alien in self.aliens:
                 alien.draw()
                 alien.checkCollision(self)
-                if (alien.y > height):
+                if (alien.y > height - 24):
                     self.lost = True
                     self.displayText("YOU DIED")
 
@@ -59,16 +67,17 @@ class Game:
 
 
 class Alien:
-    def __init__(self, game, x, y):
+    def __init__(self, game, x, y, speed):
         self.x = x
         self.game = game
         self.y = y
+        self.speed = speed
         self.size = 24
 
     def draw(self):
         alien_gif = pygame.image.load("invader.gif")
         self.game.screen.blit(alien_gif, (self.x, self.y))
-        self.y += 0.05
+        self.y += self.speed
 
     def checkCollision(self, game):
         for rocket in game.rockets:
@@ -92,12 +101,13 @@ class Hero:
 
 
 class Generator:
-    def __init__(self, game):
+    def __init__(self, game, speed):
         margin = 30
-        width = 50
+        height = 40
+        width  = 50
         for x in range(margin, game.width - margin, width):
-            for y in range(margin, int(game.height / 2), width):
-                game.aliens.append(Alien(game, x, y))
+            for y in range(margin, int(game.height / 2) - margin, height):
+                game.aliens.append(Alien(game, x, y, speed))
 
 
 class Rocket:
