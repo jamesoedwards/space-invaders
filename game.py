@@ -121,7 +121,7 @@ class Alien:
 
     def drop(self):
         if random.random() < 0.001:
-            self.game.bombs.append(Bomb(self.game, self.x, self.y))
+            self.game.bombs.append(Bomb(self.game, self.x, self.y, 3))
 
     def checkCollision(self, game):
         for rocket in game.rockets:
@@ -164,15 +164,16 @@ class Generator:
                 game.aliens.append(Alien(game, x, y, speed))
 
 class Bomb:
-    def __init__(self, game, x, y):
+    def __init__(self, game, x, y, size):
         self.x = x
         self.y = y
         self.game = game
+        self.size = size
 
     def draw(self):
         pygame.draw.rect(self.game.screen,
                         (255, 255, 0),
-                        pygame.Rect(self.x, self.y, 3, 3))
+                        pygame.Rect(self.x, self.y, self.size, self.size))
         self.y += 2
 
 
