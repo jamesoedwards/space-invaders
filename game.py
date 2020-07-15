@@ -17,6 +17,9 @@ class Game:
     def __init__(self, width, height):
         pygame.init()
         pygame.display.set_caption("Space Invaders")
+        pygame.font.init()
+        self.font = pygame.font.SysFont('courier', 18)
+
         self.width = width
         self.height = height
         self.screen = pygame.display.set_mode((width, height))
@@ -26,9 +29,12 @@ class Game:
 
         hero = Hero(self, width / 2, height - 20)
         Generator(self, alien_speed)
+        self.score = 0
+        scoreText = ScoreText(self, 10, 10)
         rocket = None
 
-        waves = 1
+        self.wave = 1
+        waveText = WaveText(self, 500, 10)
         wave_rate = 10000
         newwave = False
         timer = 0
@@ -53,12 +59,12 @@ class Game:
             dt = self.clock.tick(60)
             self.screen.fill((0, 0, 0))
             timer += dt
-            if timer >= wave_rate * waves:
+            if timer >= wave_rate * self.wave:
                 newwave = True
 
             if newwave and top_enemy_y > 0.5 * height:
                 alien_speed += 0.01
-                waves += 1
+                self.wave += 1
                 Generator(self, alien_speed)
                 newwave = False
 
@@ -77,13 +83,10 @@ class Game:
             for rocket in self.rockets:
                 rocket.draw()
 
-            if not self.lost: hero.draw()
-
-    def displayText(self, text):
-        pygame.font.init()
-        font = pygame.font.SysFont('Arial', 50)
-        textsurface = font.render(text, False, (44, 0, 62))
-        self.screen.blit(textsurface, (110, 160))
+            if not self.lost: 
+                hero.draw()
+                scoreText.draw()
+                waveText.draw()
 
     def gameOver(self):
         print("Game over!")
@@ -117,6 +120,7 @@ class Alien:
                     rocket.y > self.y - 0.5*self.size):
                 game.rockets.remove(rocket)
                 game.aliens.remove(self)
+                game.score += 10
 
 
 class Hero:
@@ -152,6 +156,25 @@ class Rocket:
                          pygame.Rect(self.x, self.y, 2, 4))
         self.y -= 2
 
+class ScoreText:
+    def __init__(self, game, x, y):
+        self.game = game
+        self.x = x
+        self.y = y
+
+    def draw(self):
+        textsurface = self.game.font.render("Score: %s" % self.game.score, False, (255, 255, 255))
+        self.game.screen.blit(textsurface, (self.x, self.y))
+
+class WaveText:
+    def __init__(self, game, x, y):
+        self.game = game
+        self.x = x
+        self.y = y
+
+    def draw(self):
+        textsurface = self.game.font.render("Wave: %s" % self.game.wave, False, (255, 255, 255))
+        self.game.screen.blit(textsurface, (self.x, self.y))
 
 if __name__ == '__main__':
     game = Game(600, 400)
