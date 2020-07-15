@@ -4,6 +4,6 @@ Space invaders game
 
 ### TODO
 
-- Invaders come in waves rather than respawn
+- Implement scoring a show wave num
 - Add UFO that drops bombs
 - Train AI using NEAT
