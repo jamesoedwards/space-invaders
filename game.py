@@ -1,5 +1,13 @@
 import pygame
 
+def wait():
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
+                return
+
 class Game:
     screen = None
     aliens = []
@@ -14,21 +22,19 @@ class Game:
         self.screen = pygame.display.set_mode((width, height))
         self.clock = pygame.time.Clock()
         done = False
-        alien_speed = 0.05
+        alien_speed = 0.75
 
         hero = Hero(self, width / 2, height - 20)
         Generator(self, alien_speed)
         rocket = None
 
-        waves = 0
-        wave_rate = 5550
+        waves = 1
+        wave_rate = 10000
         newwave = False
         timer = 0
         dt = 0
         while not done:
-            if len(self.aliens) == 0 and waves >= 10:
-                self.displayText("VICTORY ACHIEVED")
-            else if len(self.aliens) == 0:
+            if len(self.aliens) == 0:
                 newwave = True
 
             pressed = pygame.key.get_pressed()
@@ -47,11 +53,12 @@ class Game:
             dt = self.clock.tick(60)
             self.screen.fill((0, 0, 0))
             timer += dt
-            if timer % wave_rate == 0:
+            if timer >= wave_rate * waves:
                 newwave = True
 
             if newwave and top_enemy_y > 0.5 * height:
                 alien_speed += 0.01
+                waves += 1
                 Generator(self, alien_speed)
                 newwave = False
 
@@ -62,7 +69,8 @@ class Game:
                 alien.checkCollision(self)
                 if (alien.y > height - 24):
                     done = True
-                    gameOver()
+                    self.gameOver()
+                    break
                 elif (alien.y < top_enemy_y):
                     top_enemy_y = alien.y
 
@@ -78,8 +86,14 @@ class Game:
         self.screen.blit(textsurface, (110, 160))
 
     def gameOver(self):
+        print("Game over!")
         self.lost = True
-        self.displayText("YOU DIED")
+        end_screen = pygame.image.load("endscreen.gif")
+        self.screen.fill((255,255,255))
+        self.screen.blit(end_screen, (0,0))
+        pygame.display.flip()
+        wait()
+
 
 
 class Alien:
