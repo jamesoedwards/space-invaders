@@ -1,17 +1,19 @@
 import pygame
+import random
 
 def wait():
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-            if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
+            if event.type == pygame.KEYDOWN:
                 return
 
 class Game:
     screen = None
     aliens = []
     rockets = []
+    bombs = []
     lost = False
 
     def __init__(self, width, height):
@@ -53,7 +55,7 @@ class Game:
                 if event.type == pygame.QUIT:
                     done = True
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and not self.lost:
-                    self.rockets.append(Rocket(self, hero.x+11, hero.y+3))
+                    self.rockets.append(Rocket(self, hero.x, hero.y+3))
 
             pygame.display.flip()
             dt = self.clock.tick(60)
@@ -79,9 +81,14 @@ class Game:
                     break
                 elif (alien.y < top_enemy_y):
                     top_enemy_y = alien.y
+                else:
+                    alien.drop()
 
             for rocket in self.rockets:
                 rocket.draw()
+
+            for bomb in self.bombs:
+                bomb.draw()
 
             if not self.lost: 
                 hero.draw()
@@ -109,13 +116,17 @@ class Alien:
 
     def draw(self):
         alien_gif = pygame.image.load("invader.gif")
-        self.game.screen.blit(alien_gif, (self.x, self.y))
+        self.game.screen.blit(alien_gif, (self.x-12, self.y))
         self.y += self.speed
+
+    def drop(self):
+        if random.random() < 0.001:
+            self.game.bombs.append(Bomb(self.game, self.x, self.y))
 
     def checkCollision(self, game):
         for rocket in game.rockets:
-            if (rocket.x < self.x + 12 + 0.5*self.size and
-                    rocket.x > self.x + 12 - 0.5*self.size and
+            if (rocket.x < self.x + 0.5*self.size and
+                    rocket.x > self.x - 0.5*self.size and
                     rocket.y < self.y + 0.5*self.size and
                     rocket.y > self.y - 0.5*self.size):
                 game.rockets.remove(rocket)
@@ -131,7 +142,16 @@ class Hero:
 
     def draw(self):
         hero_gif = pygame.image.load("player.gif")
-        self.game.screen.blit(hero_gif, (self.x, self.y))
+        self.game.screen.blit(hero_gif, (self.x-12, self.y))
+
+    def checkCollision(self, game):
+        for bomb in game.bombs:
+            if (bomb.x < self.x + 0.5*self.size and
+                    bomb.x > self.x - 0.5*self.size and
+                    bomb.y < self.y + 0.5*self.size and
+                    bomb.y > self.y - 0.5*self.size):
+                game.bombs.remove(bomb)
+                # lose a life
 
 
 class Generator:
@@ -142,6 +162,18 @@ class Generator:
         for x in range(margin, game.width - margin, width):
             for y in range(margin, int(game.height / 2) - margin, height):
                 game.aliens.append(Alien(game, x, y, speed))
+
+class Bomb:
+    def __init__(self, game, x, y):
+        self.x = x
+        self.y = y
+        self.game = game
+
+    def draw(self):
+        pygame.draw.rect(self.game.screen,
+                        (255, 255, 0),
+                        pygame.Rect(self.x, self.y, 3, 3))
+        self.y += 2
 
 
 class Rocket:
