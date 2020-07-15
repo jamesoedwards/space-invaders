@@ -1,210 +1,117 @@
-import turtle, os, math, random 
+import pygame
 
-#Set up the screen
-wn = turtle.Screen()
-wn.bgcolor("black")
-wn.title("Space Invaders")
+class Game:
+    screen = None
+    aliens = []
+    rockets = []
+    lost = False
 
-#Register the shapes
-turtle.register_shape("invader.gif")
-turtle.register_shape("player.gif")
-turtle.register_shape("ufo.gif")
+    def __init__(self, width, height):
+        pygame.init()
+        pygame.display.set_caption("Space Invaders")
+        self.width = width
+        self.height = height
+        self.screen = pygame.display.set_mode((width, height))
+        self.clock = pygame.time.Clock()
+        done = False
 
-#Draw ground
-ground_pen = turtle.Turtle()
-ground_pen.speed(0)
-ground_pen.color("green")
-ground_pen.penup()
-ground_pen.setposition(-300,-261)
-ground_pen.pendown()
-ground_pen.pensize(2)
-ground_pen.fd(600)
-ground_pen.hideturtle()
+        hero = Hero(self, width / 2, height - 20)
+        generator = Generator(self)
+        rocket = None
 
-#Draw border
-border_pen = turtle.Turtle()
-border_pen.speed(0)
-border_pen.color("white")
-border_pen.penup()
-border_pen.setposition(-300,-300)
-border_pen.pendown()
-border_pen.pensize(3)
-for side in range(4):
-    border_pen.fd(600)
-    border_pen.lt(90)
-border_pen.hideturtle()
+        while not done:
+            if len(self.aliens) == 0:
+                self.displayText("VICTORY ACHIEVED")
 
-#Set the score to 0
-score = 0
+            pressed = pygame.key.get_pressed()
+            if pressed[pygame.K_LEFT]:
+                hero.x -= 2 if hero.x > 20 else 0
+            elif pressed[pygame.K_RIGHT]:
+                hero.x += 2 if hero.x < width - 20 else 0
 
-#Draw the score
-score_pen = turtle.Turtle()
-score_pen.speed(0)
-score_pen.color("white")
-score_pen.penup()
-score_pen.setposition(-290, 280)
-scorestring = "Score: %s" %score
-score_pen.write(scorestring, False, align="left", font=("Arial", 14, "normal"))
-score_pen.hideturtle()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    done = True
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and not self.lost:
+                    self.rockets.append(Rocket(self, hero.x+11, hero.y+3))
 
-#Create the player turtle
-player = turtle.Turtle()
-player.shape("player.gif")
-player.penup()
-player.speed(0)
-player.setposition(0, -250)
-player.setheading(90)
+            pygame.display.flip()
+            self.clock.tick(60)
+            self.screen.fill((0, 0, 0))
 
-playerspeed = 15
+            for alien in self.aliens:
+                alien.draw()
+                alien.checkCollision(self)
+                if (alien.y > height):
+                    self.lost = True
+                    self.displayText("YOU DIED")
 
-#Create UFO turtle
-ufo = turtle.Turtle()
-ufo.shape("ufo.gif")
-ufo.penup()
-ufo.speed(0)
-ufo.setposition(0,250)
-ufo.setheading(90)
+            for rocket in self.rockets:
+                rocket.draw()
 
-#Choose a number of enemies
-number_of_enemies = 10
-#Create an empty list of enemies
-enemies = []
+            if not self.lost: hero.draw()
 
-#Add enemies to the list
-for i in range(number_of_enemies):
-    #Create the enemy
-    enemies.append(turtle.Turtle())
-
-for enemy in enemies:
-    enemy.color("red")
-    enemy.shape("invader.gif")
-    enemy.penup()
-    enemy.speed(0)
-    x = random.randint(-200, 200)
-    y = random.randint(100, 250)
-    enemy.setposition(x, y)
-
-enemyspeed = 2
-
-#Create the player's bullet
-bullet = turtle.Turtle()
-bullet.color("yellow")
-bullet.shape("triangle")
-bullet.penup()
-bullet.speed(0)
-bullet.setheading(90)
-bullet.shapesize(0.25, 0.5)
-bullet.hideturtle()
-
-bulletspeed = 20
-
-#Define bullet state
-#ready - ready to fire
-#fire - bullet is firing
-bulletstate = "ready"
+    def displayText(self, text):
+        pygame.font.init()
+        font = pygame.font.SysFont('Arial', 50)
+        textsurface = font.render(text, False, (44, 0, 62))
+        self.screen.blit(textsurface, (110, 160))
 
 
-#Move the player left and right
-def move_left():
-    x = player.xcor()
-    x -= playerspeed
-    if x < -285:
-        x = -285
-    player.setx(x)
-    
-def move_right():
-    x = player.xcor()
-    x += playerspeed
-    if x > 285:
-        x = 285
-    player.setx(x)
-    
-def fire_bullet():
-    #Declare bulletstate as a global if it needs changed
-    global bulletstate
-    if bulletstate == "ready":
-        bulletstate = "fire"
-        #Move the bullet to the just above the player
-        x = player.xcor()
-        y = player.ycor() + 10
-        bullet.setposition(x, y)
-        bullet.showturtle()
+class Alien:
+    def __init__(self, game, x, y):
+        self.x = x
+        self.game = game
+        self.y = y
+        self.size = 24
 
-def isCollision(t1, t2):
-    distance = math.sqrt(math.pow(t1.xcor()-t2.xcor(),2)+math.pow(t1.ycor()-t2.ycor(),2))
-    if distance < 15:
-        return True
-    else:
-        return False
-#Create keyboard bindings
-turtle.listen()
-turtle.onkey(move_left, "Left")
-turtle.onkey(move_right, "Right")
-turtle.onkey(fire_bullet, "space")
+    def draw(self):
+        alien_gif = pygame.image.load("invader.gif")
+        self.game.screen.blit(alien_gif, (self.x, self.y))
+        self.y += 0.05
 
-#Main game loop
-playing=True
-while playing:
-    
-    for enemy in enemies:
-        #Move the enemy
-        x = enemy.xcor()
-        x += enemyspeed
-        enemy.setx(x)
+    def checkCollision(self, game):
+        for rocket in game.rockets:
+            if (rocket.x < self.x + 12 + 0.5*self.size and
+                    rocket.x > self.x + 12 - 0.5*self.size and
+                    rocket.y < self.y + 0.5*self.size and
+                    rocket.y > self.y - 0.5*self.size):
+                game.rockets.remove(rocket)
+                game.aliens.remove(self)
 
-        #Move the enemy back and down
-        if enemy.xcor() > 285:
-            #Move all enemies down
-            for e in enemies:
-                y = e.ycor()
-                y -= 30
-                e.sety(y)
-            #Change enemy direction
-            enemyspeed *= -1
-        
-        if enemy.xcor() < -285:
-            #Move all enemies down
-            for e in enemies:
-                y = e.ycor()
-                y -= 30
-                e.sety(y)
-            #Change enemy direction
-            enemyspeed *= -1
-            
-        #Check for a collision between the bullet and the enemy
-        if isCollision(bullet, enemy):
-            #Reset the bullet
-            bullet.hideturtle()
-            bulletstate = "ready"
-            bullet.setposition(0, -400)
-            #Reset the enemy
-            x = random.randint(-200, 200)
-            y = random.randint(100, 250)
-            enemy.setposition(x, y)
-            #Update the score
-            score += 10
-            scorestring = "Score: %s" %score
-            score_pen.clear()
-            score_pen.write(scorestring, False, align="left", font=("Arial", 14, "normal"))
-        
-        if enemy.ycor() <= player.ycor():
-            player.hideturtle()
-            for e in enemies:
-                e.hideturtle()
-            wn.clearscreen()
-            wn.bgpic("endscreen.png")
-            playing=False
 
-        
-    #Move the bullet
-    if bulletstate == "fire":
-        y = bullet.ycor()
-        y += bulletspeed
-        bullet.sety(y)
-    
-    #Check to see if the bullet has gone to the top
-    if bullet.ycor() > 275:
-        bullet.hideturtle()
-        bulletstate = "ready"
+class Hero:
+    def __init__(self, game, x, y):
+        self.x = x
+        self.game = game
+        self.y = y
 
-delay = input("Press enter to finish...")
+    def draw(self):
+        hero_gif = pygame.image.load("player.gif")
+        self.game.screen.blit(hero_gif, (self.x, self.y))
+
+
+class Generator:
+    def __init__(self, game):
+        margin = 30
+        width = 50
+        for x in range(margin, game.width - margin, width):
+            for y in range(margin, int(game.height / 2), width):
+                game.aliens.append(Alien(game, x, y))
+
+
+class Rocket:
+    def __init__(self, game, x, y):
+        self.x = x
+        self.y = y
+        self.game = game
+
+    def draw(self):
+        pygame.draw.rect(self.game.screen,
+                         (254, 52, 110),
+                         pygame.Rect(self.x, self.y, 2, 4))
+        self.y -= 2
+
+
+if __name__ == '__main__':
+    game = Game(600, 400)
