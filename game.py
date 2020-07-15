@@ -92,7 +92,7 @@ class Game:
         print("Game over!")
         self.lost = True
         end_screen = pygame.image.load("endscreen.gif")
-        self.screen.fill((255,255,255))
+        self.screen.fill((0,0,0))
         self.screen.blit(end_screen, (0,0))
         pygame.display.flip()
         wait()
