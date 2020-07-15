@@ -22,7 +22,7 @@ class Game:
         self.screen = pygame.display.set_mode((width, height))
         self.clock = pygame.time.Clock()
         done = False
-        alien_speed = 0.75
+        alien_speed = 0.05
 
         hero = Hero(self, width / 2, height - 20)
         Generator(self, alien_speed)
