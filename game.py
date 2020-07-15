@@ -20,12 +20,16 @@ class Game:
         Generator(self, alien_speed)
         rocket = None
 
-        wave_rate = 6000
+        waves = 0
+        wave_rate = 5550
+        newwave = False
         timer = 0
         dt = 0
         while not done:
-            if len(self.aliens) == 0:
+            if len(self.aliens) == 0 and waves >= 10:
                 self.displayText("VICTORY ACHIEVED")
+            else if len(self.aliens) == 0:
+                newwave = True
 
             pressed = pygame.key.get_pressed()
             if pressed[pygame.K_LEFT]:
@@ -44,15 +48,23 @@ class Game:
             self.screen.fill((0, 0, 0))
             timer += dt
             if timer % wave_rate == 0:
+                newwave = True
+
+            if newwave and top_enemy_y > 0.5 * height:
                 alien_speed += 0.01
                 Generator(self, alien_speed)
+                newwave = False
+
+            top_enemy_y = height
 
             for alien in self.aliens:
                 alien.draw()
                 alien.checkCollision(self)
                 if (alien.y > height - 24):
-                    self.lost = True
-                    self.displayText("YOU DIED")
+                    done = True
+                    gameOver()
+                elif (alien.y < top_enemy_y):
+                    top_enemy_y = alien.y
 
             for rocket in self.rockets:
                 rocket.draw()
@@ -64,6 +76,10 @@ class Game:
         font = pygame.font.SysFont('Arial', 50)
         textsurface = font.render(text, False, (44, 0, 62))
         self.screen.blit(textsurface, (110, 160))
+
+    def gameOver(self):
+        self.lost = True
+        self.displayText("YOU DIED")
 
 
 class Alien:
