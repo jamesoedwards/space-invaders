@@ -1,6 +1,12 @@
 import pygame
 import random
 
+BLACK  = (0,0,0)
+WHITE  = (255,255,255)
+GREEN  = (128,128,0)
+RED    = (255,50,100)
+YELLOW = (255,255,0)
+
 pygame.init()
 player_gif = pygame.image.load("images/player.gif")
 alien_gif  = pygame.image.load("images/invader.gif")
@@ -93,7 +99,7 @@ class Game:
 
             pygame.display.flip()
             self.clock.tick(60)
-            self.screen.fill((0, 0, 0))
+            self.screen.fill(BLACK)
 
             if newwave or top_enemy_y > 0.5 * self.height:
                 self.score += 50 + 10 * self.wave
@@ -122,6 +128,8 @@ class Game:
                 ufo.draw()
                 ufo.checkCollision(self)
                 ufo.drop()
+            if len(self.ufos) == 0:
+                game.ufos.append(Ufo(game, random.choice([-self.width, 2*self.width]), 28))
 
             for rocket in self.rockets:
                 rocket.draw()
@@ -143,7 +151,7 @@ class Game:
                     life.draw()
 
             # ground
-            pygame.draw.line(self.screen, (128,128,0), (0,505), (600,505), 5)
+            pygame.draw.line(self.screen, GREEN, (0,505), (600,505), 5)
 
         # End: while not done
 
@@ -154,11 +162,11 @@ class Game:
     def gameOver(self):
         print("Game over!")
         self.lost = True
-        self.screen.fill((0,0,0))
+        self.screen.fill(BLACK)
         self.screen.blit(end_screen, (0,0))
-        textsurface = self.font.render("Final score: %s" % self.score, False, (255, 255, 255))
+        textsurface = self.font.render("Final score: %s" % self.score, False, WHITE)
         self.screen.blit(textsurface, (210, 350))
-        textsurface2 = self.font.render("Press enter...", False, (255, 255, 255))
+        textsurface2 = self.font.render("Press enter...", False, WHITE)
         self.screen.blit(textsurface2, (225, 400))
         pygame.display.flip()
         wait()
@@ -201,24 +209,24 @@ class Ufo:
         self.size = 36
 
     def draw(self):
-        self.game.screen.blit(ufo_gif, (self.x-18, self.y))
+        self.game.screen.blit(ufo_gif, (self.x-18, self.y-8))
         self.x += self.direction * self.speed
-        if self.x <= 20 or self.x >= self.game.width - 20:
+        if self.x <= -self.game.width or self.x >= 2 * self.game.width:
             self.direction *= -1
 
     def drop(self):
         if random.random() < 0.01 + 0.001 * self.game.wave:
-            self.game.bombs.append(Bomb(self.game, self.x, self.y, 5))
+            self.game.bombs.append(Bomb(self.game, self.x-2, self.y+2, 5))
 
     def checkCollision(self, game):
         for rocket in game.rockets:
             if (rocket.x < self.x + 0.5*self.size and
-                    rocket.x > self.x - 0.5*self.size and
-                    rocket.y < self.y + 0.5*self.size and
-                    rocket.y > self.y - 0.5*self.size):
+                    rocket.x >= self.x - 0.5*self.size and
+                    rocket.y < self.y + 0.25*self.size and
+                    rocket.y > self.y - 0.25*self.size):
                 game.rockets.remove(rocket)
                 game.ufos.remove(self)
-                game.score += 100
+                game.score += 250
 
 
 class Player:
@@ -272,7 +280,7 @@ class Ammo:
     def draw(self):
         self.game.screen.blit(ammo_gif, (self.x, self.y))
         remaining_ammo = self.game.max_ammo - len(self.game.rockets)
-        textsurface = self.game.font.render(str(remaining_ammo), False, (255, 255, 255))
+        textsurface = self.game.font.render(str(remaining_ammo), False, WHITE)
         self.game.screen.blit(textsurface, (self.x + 35, self.y + 10))
 
 
@@ -285,7 +293,6 @@ class Generator:
         for x in range(x_margin, game.width - x_margin, width):
             for y in range(y_margin, int(game.height / 2) - y_margin, height):
                 game.aliens.append(Alien(game, x, y, speed))
-        game.ufos.append(Ufo(game, random.uniform(20,580), 28))
 
 
 class Bomb:
@@ -297,7 +304,7 @@ class Bomb:
 
     def draw(self):
         pygame.draw.rect(self.game.screen,
-                        (255, 255, 0),
+                        YELLOW,
                         pygame.Rect(self.x, self.y, self.size, self.size))
         self.y += 2
 
@@ -310,7 +317,7 @@ class Rocket:
 
     def draw(self):
         pygame.draw.rect(self.game.screen,
-                         (254, 52, 110),
+                         RED,
                          pygame.Rect(self.x, self.y, 2, 4))
         self.y -= 2
         if self.y <= 0:
@@ -324,7 +331,7 @@ class ScoreText:
         self.y = y
 
     def draw(self):
-        textsurface = self.game.font.render("Score: %s" % self.game.score, False, (255, 255, 255))
+        textsurface = self.game.font.render("Score: %s" % self.game.score, False, WHITE)
         self.game.screen.blit(textsurface, (self.x, self.y))
 
 
@@ -335,7 +342,7 @@ class WaveText:
         self.y = y
 
     def draw(self):
-        textsurface = self.game.font.render("Wave: %s" % self.game.wave, False, (255, 255, 255))
+        textsurface = self.game.font.render("Wave: %s" % self.game.wave, False, WHITE)
         self.game.screen.blit(textsurface, (self.x, self.y))
 
 
