@@ -17,47 +17,50 @@ def wait():
                 return
 
 class Game:
-    screen = None
-    aliens = []
-    ufos = []
-    rockets = []
-    bombs = []
-    lives = []
-    lost = False
 
     def __init__(self, width, height):
+        self.screen = None
+        self.font = None
+        self.clock = None
+        self.aliens = []
+        self.ufos = []
+        self.rockets = []
+        self.bombs = []
+        self.lives = []
+        self.lost = False
+        self.width = width
+        self.height = height
+        self.wave = 1
+        self.lives_count = 3
+        self.score = 0
+        self.max_ammo = 20
+
+    def run(self):
         pygame.display.set_caption("Space Invaders")
         pygame.font.init()
         self.font = pygame.font.SysFont('courier', 18)
 
-        self.width = width
-        self.height = height
-        self.screen = pygame.display.set_mode((width, height+100))
+        self.screen = pygame.display.set_mode((self.width, self.height+100))
         self.clock = pygame.time.Clock()
 
-        self.wave = 1
         alien_speed = 0.04 + 0.01 * self.wave
         Generator(self, alien_speed)
 
-        player = Player(self, width / 2, height - 20)
-        self.lives_count = 3
+        player = Player(self, self.width / 2, self.height - 20)
         l_x = 30
         l_y = 530
         for i in range(self.lives_count):
             self.lives.append(Life(self, l_x, l_y))
             l_x += 50
-        self.score = 0
+
         scoreText = ScoreText(self, 10, 10)
-        self.max_ammo = 20
         ammo = Ammo(self, 515, 525)
-        rocket = None
+        #rocket = None
 
         done = False
         newwave = False
+        top_enemy_y = 0
         waveText = WaveText(self, 500, 10)
-        wave_rate = 10000
-        timer = 0
-        dt = 0
         while not done:
             if self.lives_count == 0:
                 done = True
@@ -86,25 +89,22 @@ class Game:
                     break
 
             pygame.display.flip()
-            dt = self.clock.tick(60)
+            self.clock.tick(60)
             self.screen.fill((0, 0, 0))
-            timer += dt
-            if timer >= wave_rate * self.wave:
-                newwave = True
 
-            if newwave and top_enemy_y > 0.5 * height:
+            if newwave or top_enemy_y > 0.5 * self.height:
                 self.score += 50 + 10 * self.wave
                 alien_speed += 0.01
                 self.wave += 1
                 Generator(self, alien_speed)
                 newwave = False
 
-            top_enemy_y = height
+            top_enemy_y = self.height
 
             for alien in self.aliens:
                 alien.draw()
                 alien.checkCollision(self)
-                if (alien.y > height - 24):
+                if (alien.y > self.height - 24):
                     done = True
                     self.gameOver()
                     break
@@ -320,3 +320,4 @@ class WaveText:
 
 if __name__ == '__main__':
     game = Game(600, 500)
+    game.run()
