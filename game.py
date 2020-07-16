@@ -17,47 +17,53 @@ def wait():
                 return
 
 class Game:
-    screen = None
-    aliens = []
-    ufos = []
-    rockets = []
-    bombs = []
-    lives = []
-    lost = False
 
     def __init__(self, width, height):
+        self.width = width
+        self.height = height
+
+        self.screen = None
+        self.font = None
+        self.clock = None
+
+        self.aliens = []
+        self.ufos = []
+        self.rockets = []
+        self.bombs = []
+        self.lives = []
+
+        self.lost = False
+        self.wave = 1
+        self.alien_direction = 1
+        self.lives_count = 3
+        self.score = 0
+        self.max_ammo = 20
+
+    def run(self):
         pygame.display.set_caption("Space Invaders")
         pygame.font.init()
         self.font = pygame.font.SysFont('courier', 18)
 
-        self.width = width
-        self.height = height
-        self.screen = pygame.display.set_mode((width, height+100))
+        self.screen = pygame.display.set_mode((self.width, self.height+100))
         self.clock = pygame.time.Clock()
 
-        self.wave = 1
         alien_speed = 0.04 + 0.01 * self.wave
         Generator(self, alien_speed)
 
-        player = Player(self, width / 2, height - 20)
-        self.lives_count = 3
+        player = Player(self, self.width / 2, self.height - 20)
         l_x = 30
         l_y = 530
         for i in range(self.lives_count):
             self.lives.append(Life(self, l_x, l_y))
             l_x += 50
-        self.score = 0
+
         scoreText = ScoreText(self, 10, 10)
-        self.max_ammo = 20
+        waveText = WaveText(self, 500, 10)
         ammo = Ammo(self, 515, 525)
-        rocket = None
 
         done = False
         newwave = False
-        waveText = WaveText(self, 500, 10)
-        wave_rate = 10000
-        timer = 0
-        dt = 0
+        top_enemy_y = 0
         while not done:
             if self.lives_count == 0:
                 done = True
@@ -86,32 +92,31 @@ class Game:
                     break
 
             pygame.display.flip()
-            dt = self.clock.tick(60)
+            self.clock.tick(60)
             self.screen.fill((0, 0, 0))
-            timer += dt
-            if timer >= wave_rate * self.wave:
-                newwave = True
 
-            if newwave and top_enemy_y > 0.5 * height:
+            if newwave or top_enemy_y > 0.5 * self.height:
                 self.score += 50 + 10 * self.wave
                 alien_speed += 0.01
                 self.wave += 1
                 Generator(self, alien_speed)
                 newwave = False
 
-            top_enemy_y = height
+            top_enemy_y = self.height
 
             for alien in self.aliens:
                 alien.draw()
                 alien.checkCollision(self)
-                if (alien.y > height - 24):
+                if (alien.y > self.height - 24):
                     done = True
                     self.gameOver()
                     break
                 elif (alien.y < top_enemy_y):
                     top_enemy_y = alien.y
-                else:
-                    alien.drop()
+                alien.drop()
+                if (alien.x > self.width - 25 or alien.x < 25):
+                    self.alien_direction *= -1
+                    self.shiftAliens()
 
             for ufo in self.ufos:
                 ufo.draw()
@@ -138,6 +143,10 @@ class Game:
 
         # End: while not done
 
+    def shiftAliens(self):
+        for alien in self.aliens:
+            alien.y += 15
+
     def gameOver(self):
         print("Game over!")
         self.lost = True
@@ -151,7 +160,6 @@ class Game:
         wait()
 
 
-
 class Alien:
     def __init__(self, game, x, y, speed):
         self.x = x
@@ -162,7 +170,7 @@ class Alien:
 
     def draw(self):
         self.game.screen.blit(alien_gif, (self.x-12, self.y))
-        self.y += self.speed
+        self.x += self.speed * self.game.alien_direction
 
     def drop(self):
         if random.random() < 0.0001 * self.game.wave:
@@ -177,6 +185,7 @@ class Alien:
                 game.rockets.remove(rocket)
                 game.aliens.remove(self)
                 game.score += 10
+
 
 class Ufo:
     def __init__(self, game, x, y):
@@ -194,7 +203,7 @@ class Ufo:
             self.direction *= -1
 
     def drop(self):
-        if random.random() < 0.01 + 0.002 * self.game.wave:
+        if random.random() < 0.01 + 0.001 * self.game.wave:
             self.game.bombs.append(Bomb(self.game, self.x, self.y, 5))
 
     def checkCollision(self, game):
@@ -206,6 +215,7 @@ class Ufo:
                 game.rockets.remove(rocket)
                 game.ufos.remove(self)
                 game.score += 100
+
 
 class Player:
     def __init__(self, game, x, y):
@@ -238,6 +248,7 @@ class Player:
                 game.lives_count -= 1
                 game.lives.pop()
 
+
 class Life:
     def __init__(self, game, x, y):
         self.x = x
@@ -246,6 +257,7 @@ class Life:
 
     def draw(self):
         self.game.screen.blit(player_gif, (self.x, self.y))
+
 
 class Ammo:
     def __init__(self, game, x, y):
@@ -262,13 +274,15 @@ class Ammo:
 
 class Generator:
     def __init__(self, game, speed):
-        margin = 45
+        x_margin = 25
+        y_margin = 45
         height = 40
         width  = 50
-        for x in range(margin, game.width - margin, width):
-            for y in range(margin, int(game.height / 2) - margin, height):
+        for x in range(x_margin, game.width - x_margin, width):
+            for y in range(y_margin, int(game.height / 2) - y_margin, height):
                 game.aliens.append(Alien(game, x, y, speed))
         game.ufos.append(Ufo(game, random.uniform(20,580), 28))
+
 
 class Bomb:
     def __init__(self, game, x, y, size):
@@ -298,6 +312,7 @@ class Rocket:
         if self.y <= 0:
             self.game.rockets.remove(self)
 
+
 class ScoreText:
     def __init__(self, game, x, y):
         self.game = game
@@ -307,6 +322,7 @@ class ScoreText:
     def draw(self):
         textsurface = self.game.font.render("Score: %s" % self.game.score, False, (255, 255, 255))
         self.game.screen.blit(textsurface, (self.x, self.y))
+
 
 class WaveText:
     def __init__(self, game, x, y):
@@ -318,5 +334,8 @@ class WaveText:
         textsurface = self.game.font.render("Wave: %s" % self.game.wave, False, (255, 255, 255))
         self.game.screen.blit(textsurface, (self.x, self.y))
 
+
 if __name__ == '__main__':
     game = Game(600, 500)
+    game.run()
+
