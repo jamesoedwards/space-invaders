@@ -40,7 +40,7 @@ class Game:
 
         self.lost = False
         self.wave = 1
-        self.alien_direction = 1
+        self.alien_direction = random.choice([-1,1])
         self.lives_count = 3
         self.score = 0
         self.max_ammo = 6
@@ -102,14 +102,13 @@ class Game:
             self.screen.fill(BLACK)
 
             if newwave or top_enemy_y > 0.5 * self.height:
-                self.score += 50 + 10 * self.wave
+                self.score += 100 * self.wave
                 alien_speed += 0.01
                 self.wave += 1
                 Generator(self, alien_speed)
                 newwave = False
 
             top_enemy_y = self.height
-
             for alien in self.aliens:
                 alien.draw()
                 alien.checkCollision(self)
@@ -121,7 +120,6 @@ class Game:
                     top_enemy_y = alien.y
                 alien.drop()
                 if (alien.x > self.width - 25 or alien.x < 25):
-                    self.alien_direction *= -1
                     self.shiftAliens()
 
             for ufo in self.ufos:
@@ -156,8 +154,9 @@ class Game:
         # End: while not done
 
     def shiftAliens(self):
+        self.alien_direction *= -1
         for alien in self.aliens:
-            alien.y += 15
+            alien.y += 24
 
     def gameOver(self):
         print("Game over!")
@@ -211,12 +210,13 @@ class Ufo:
     def draw(self):
         self.game.screen.blit(ufo_gif, (self.x-18, self.y-8))
         self.x += self.direction * self.speed
-        if self.x <= -self.game.width or self.x >= 2 * self.game.width:
+        if self.x < -self.game.width or self.x > 2 * self.game.width:
             self.direction *= -1
 
     def drop(self):
-        if random.random() < 0.01 + 0.001 * self.game.wave:
-            self.game.bombs.append(Bomb(self.game, self.x-2, self.y+2, 5))
+        if self.x < self.game.width and self.x > 0:
+            if random.random() < 0.009 + 0.001 * self.game.wave:
+                self.game.bombs.append(Bomb(self.game, self.x-2, self.y+2, 5))
 
     def checkCollision(self, game):
         for rocket in game.rockets:
@@ -291,6 +291,8 @@ class Generator:
         height = 40
         width  = 50
         for x in range(x_margin, game.width - x_margin, width):
+            if game.alien_direction == -1:
+                x += 50
             for y in range(y_margin, int(game.height / 2) - y_margin, height):
                 game.aliens.append(Alien(game, x, y, speed))
 
@@ -319,7 +321,7 @@ class Rocket:
         pygame.draw.rect(self.game.screen,
                          RED,
                          pygame.Rect(self.x, self.y, 2, 4))
-        self.y -= 2
+        self.y -= 3
         if self.y <= 0:
             self.game.rockets.remove(self)
 
