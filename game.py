@@ -32,7 +32,7 @@ class Game:
         self.screen = pygame.display.set_mode((width, height+100))
         self.clock = pygame.time.Clock()
 
-        self.wave = 51
+        self.wave = 1
         alien_speed = 0.04 + 0.01 * self.wave
         Generator(self, alien_speed)
 
