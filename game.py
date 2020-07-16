@@ -58,13 +58,12 @@ class Game:
             l_x += 50
 
         scoreText = ScoreText(self, 10, 10)
+        waveText = WaveText(self, 500, 10)
         ammo = Ammo(self, 515, 525)
-        #rocket = None
 
         done = False
         newwave = False
         top_enemy_y = 0
-        waveText = WaveText(self, 500, 10)
         while not done:
             if self.lives_count == 0:
                 done = True
@@ -161,7 +160,6 @@ class Game:
         wait()
 
 
-
 class Alien:
     def __init__(self, game, x, y, speed):
         self.x = x
@@ -187,6 +185,7 @@ class Alien:
                 game.rockets.remove(rocket)
                 game.aliens.remove(self)
                 game.score += 10
+
 
 class Ufo:
     def __init__(self, game, x, y):
@@ -216,6 +215,7 @@ class Ufo:
                 game.rockets.remove(rocket)
                 game.ufos.remove(self)
                 game.score += 100
+
 
 class Player:
     def __init__(self, game, x, y):
@@ -248,6 +248,7 @@ class Player:
                 game.lives_count -= 1
                 game.lives.pop()
 
+
 class Life:
     def __init__(self, game, x, y):
         self.x = x
@@ -256,6 +257,7 @@ class Life:
 
     def draw(self):
         self.game.screen.blit(player_gif, (self.x, self.y))
+
 
 class Ammo:
     def __init__(self, game, x, y):
@@ -279,6 +281,7 @@ class Generator:
             for y in range(margin, int(game.height / 2) - margin, height):
                 game.aliens.append(Alien(game, x, y, speed))
         game.ufos.append(Ufo(game, random.uniform(20,580), 28))
+
 
 class Bomb:
     def __init__(self, game, x, y, size):
@@ -308,6 +311,7 @@ class Rocket:
         if self.y <= 0:
             self.game.rockets.remove(self)
 
+
 class ScoreText:
     def __init__(self, game, x, y):
         self.game = game
@@ -317,6 +321,7 @@ class ScoreText:
     def draw(self):
         textsurface = self.game.font.render("Score: %s" % self.game.score, False, (255, 255, 255))
         self.game.screen.blit(textsurface, (self.x, self.y))
+
 
 class WaveText:
     def __init__(self, game, x, y):
@@ -328,6 +333,8 @@ class WaveText:
         textsurface = self.game.font.render("Wave: %s" % self.game.wave, False, (255, 255, 255))
         self.game.screen.blit(textsurface, (self.x, self.y))
 
+
 if __name__ == '__main__':
     game = Game(600, 500)
     game.run()
+
