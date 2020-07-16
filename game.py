@@ -145,7 +145,7 @@ class Game:
 
     def shiftAliens(self):
         for alien in self.aliens:
-            alien.y += 12
+            alien.y += 15
 
     def gameOver(self):
         print("Game over!")
@@ -203,7 +203,7 @@ class Ufo:
             self.direction *= -1
 
     def drop(self):
-        if random.random() < 0.01 + 0.002 * self.game.wave:
+        if random.random() < 0.01 + 0.001 * self.game.wave:
             self.game.bombs.append(Bomb(self.game, self.x, self.y, 5))
 
     def checkCollision(self, game):
@@ -274,11 +274,12 @@ class Ammo:
 
 class Generator:
     def __init__(self, game, speed):
-        margin = 45
+        x_margin = 25
+        y_margin = 45
         height = 40
         width  = 50
-        for x in range(margin, game.width - margin, width):
-            for y in range(margin, int(game.height / 2) - margin, height):
+        for x in range(x_margin, game.width - x_margin, width):
+            for y in range(y_margin, int(game.height / 2) - y_margin, height):
                 game.aliens.append(Alien(game, x, y, speed))
         game.ufos.append(Ufo(game, random.uniform(20,580), 28))
 
