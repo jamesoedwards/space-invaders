@@ -3,7 +3,8 @@ import random
 
 pygame.init()
 player_gif = pygame.image.load("player.gif")
-alien_gif = pygame.image.load("invader.gif")
+alien_gif  = pygame.image.load("invader.gif")
+ufo_gif    = pygame.image.load("ufo.gif")
 end_screen = pygame.image.load("endscreen.gif")
 
 def wait():
@@ -17,6 +18,7 @@ def wait():
 class Game:
     screen = None
     aliens = []
+    ufos = []
     rockets = []
     bombs = []
     lives = []
@@ -73,6 +75,10 @@ class Game:
                     done = True
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and not self.lost:
                     self.rockets.append(Rocket(self, player.x, player.y+3))
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_q:
+                    done = True
+                    self.gameOver()
+                    break
 
             pygame.display.flip()
             dt = self.clock.tick(60)
@@ -82,7 +88,7 @@ class Game:
                 newwave = True
 
             if newwave and top_enemy_y > 0.5 * height:
-                self.score += 50
+                self.score += 50 + 10 * self.wave
                 alien_speed += 0.01
                 self.wave += 1
                 Generator(self, alien_speed)
@@ -101,6 +107,11 @@ class Game:
                     top_enemy_y = alien.y
                 else:
                     alien.drop()
+
+            for ufo in self.ufos:
+                ufo.draw()
+                ufo.checkCollision(self)
+                ufo.drop()
 
             for rocket in self.rockets:
                 rocket.draw()
@@ -161,6 +172,34 @@ class Alien:
                 game.aliens.remove(self)
                 game.score += 10
 
+class Ufo:
+    def __init__(self, game, x, y):
+        self.x = x
+        self.game = game
+        self.y = y
+        self.speed = 1.9 + 0.1 * self.game.wave
+        self.direction = -1
+        self.size = 36
+
+    def draw(self):
+        self.game.screen.blit(ufo_gif, (self.x-18, self.y))
+        self.x += self.direction * self.speed
+        if self.x <= 20 or self.x >= self.game.width - 20:
+            self.direction *= -1
+
+    def drop(self):
+        if random.random() < 0.01 + 0.002 * self.game.wave:
+            self.game.bombs.append(Bomb(self.game, self.x, self.y, 5))
+
+    def checkCollision(self, game):
+        for rocket in game.rockets:
+            if (rocket.x < self.x + 0.5*self.size and
+                    rocket.x > self.x - 0.5*self.size and
+                    rocket.y < self.y + 0.5*self.size and
+                    rocket.y > self.y - 0.5*self.size):
+                game.rockets.remove(rocket)
+                game.ufos.remove(self)
+                game.score += 100
 
 class Player:
     def __init__(self, game, x, y):
@@ -195,12 +234,13 @@ class Life:
 
 class Generator:
     def __init__(self, game, speed):
-        margin = 30
+        margin = 45
         height = 40
         width  = 50
         for x in range(margin, game.width - margin, width):
             for y in range(margin, int(game.height / 2) - margin, height):
                 game.aliens.append(Alien(game, x, y, speed))
+        game.ufos.append(Ufo(game, random.uniform(20,580), 28))
 
 class Bomb:
     def __init__(self, game, x, y, size):
