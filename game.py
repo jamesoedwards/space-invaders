@@ -2,7 +2,7 @@ import pygame
 import random
 
 pygame.init()
-hero_gif = pygame.image.load("player.gif")
+player_gif = pygame.image.load("player.gif")
 alien_gif = pygame.image.load("invader.gif")
 end_screen = pygame.image.load("endscreen.gif")
 
@@ -11,7 +11,7 @@ def wait():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-            if event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 return
 
 class Game:
@@ -32,11 +32,11 @@ class Game:
         self.screen = pygame.display.set_mode((width, height+100))
         self.clock = pygame.time.Clock()
 
-        self.wave = 1
+        self.wave = 51
         alien_speed = 0.04 + 0.01 * self.wave
         Generator(self, alien_speed)
 
-        hero = Hero(self, width / 2, height - 20)
+        player = Player(self, width / 2, height - 20)
         self.lives_count = 3
         l_x = 30
         l_y = 530
@@ -64,15 +64,15 @@ class Game:
 
             pressed = pygame.key.get_pressed()
             if pressed[pygame.K_LEFT]:
-                hero.x -= 2 if hero.x > 20 else 0
+                player.x -= 2 if player.x > 20 else 0
             elif pressed[pygame.K_RIGHT]:
-                hero.x += 2 if hero.x < width - 20 else 0
+                player.x += 2 if player.x < width - 20 else 0
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     done = True
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and not self.lost:
-                    self.rockets.append(Rocket(self, hero.x, hero.y+3))
+                    self.rockets.append(Rocket(self, player.x, player.y+3))
 
             pygame.display.flip()
             dt = self.clock.tick(60)
@@ -109,8 +109,8 @@ class Game:
                 bomb.draw()
 
             if not self.lost: 
-                hero.draw()
-                hero.checkCollision(self)
+                player.draw()
+                player.checkCollision(self)
                 scoreText.draw()
                 waveText.draw()
                 for life in self.lives:
@@ -126,6 +126,10 @@ class Game:
         self.lost = True
         self.screen.fill((0,0,0))
         self.screen.blit(end_screen, (0,0))
+        textsurface = self.font.render("Final score: %s" % self.score, False, (255, 255, 255))
+        self.screen.blit(textsurface, (215, 350))
+        textsurface2 = self.font.render("Press enter...", False, (255, 255, 255))
+        self.screen.blit(textsurface2, (225, 400))
         pygame.display.flip()
         wait()
 
@@ -158,7 +162,7 @@ class Alien:
                 game.score += 10
 
 
-class Hero:
+class Player:
     def __init__(self, game, x, y):
         self.x = x
         self.game = game
@@ -166,7 +170,7 @@ class Hero:
         self.size = 24
 
     def draw(self):
-        self.game.screen.blit(hero_gif, (self.x - 12, self.y))
+        self.game.screen.blit(player_gif, (self.x - 12, self.y))
 
     def checkCollision(self, game):
         for bomb in game.bombs:
@@ -186,7 +190,7 @@ class Life:
         self.game = game
 
     def draw(self):
-        self.game.screen.blit(hero_gif, (self.x, self.y))
+        self.game.screen.blit(player_gif, (self.x, self.y))
 
 
 class Generator:
