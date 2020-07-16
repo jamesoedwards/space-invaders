@@ -2,11 +2,11 @@ import pygame
 import random
 
 pygame.init()
-player_gif = pygame.image.load("player.gif")
-alien_gif  = pygame.image.load("invader.gif")
-ammo_gif   = pygame.image.load("ammo.gif")
-ufo_gif    = pygame.image.load("ufo.gif")
-end_screen = pygame.image.load("endscreen.gif")
+player_gif = pygame.image.load("images/player.gif")
+alien_gif  = pygame.image.load("images/invader.gif")
+ammo_gif   = pygame.image.load("images/ammo.gif")
+ufo_gif    = pygame.image.load("images/ufo.gif")
+end_screen = pygame.image.load("images/endscreen.gif")
 
 def wait():
     while True:
@@ -37,7 +37,7 @@ class Game:
         self.alien_direction = 1
         self.lives_count = 3
         self.score = 0
-        self.max_ammo = 20
+        self.max_ammo = 6
 
     def run(self):
         pygame.display.set_caption("Space Invaders")
@@ -127,7 +127,11 @@ class Game:
                 rocket.draw()
 
             for bomb in self.bombs:
-                bomb.draw()
+                if bomb.y > self.height:
+                    self.score += 1
+                    self.bombs.remove(bomb)
+                else:
+                    bomb.draw()
 
             if not self.lost: 
                 player.draw()
