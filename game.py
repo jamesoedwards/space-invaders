@@ -62,6 +62,7 @@ class Game:
                 break
 
             if len(self.aliens) == 0:
+                self.rockets = []
                 newwave = True
 
             pressed = pygame.key.get_pressed()
@@ -138,7 +139,7 @@ class Game:
         self.screen.fill((0,0,0))
         self.screen.blit(end_screen, (0,0))
         textsurface = self.font.render("Final score: %s" % self.score, False, (255, 255, 255))
-        self.screen.blit(textsurface, (215, 350))
+        self.screen.blit(textsurface, (210, 350))
         textsurface2 = self.font.render("Press enter...", False, (255, 255, 255))
         self.screen.blit(textsurface2, (225, 400))
         pygame.display.flip()
