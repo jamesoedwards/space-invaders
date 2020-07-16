@@ -19,17 +19,20 @@ def wait():
 class Game:
 
     def __init__(self, width, height):
+        self.width = width
+        self.height = height
+
         self.screen = None
         self.font = None
         self.clock = None
+
         self.aliens = []
         self.ufos = []
         self.rockets = []
         self.bombs = []
         self.lives = []
+
         self.lost = False
-        self.width = width
-        self.height = height
         self.wave = 1
         self.lives_count = 3
         self.score = 0
@@ -110,8 +113,7 @@ class Game:
                     break
                 elif (alien.y < top_enemy_y):
                     top_enemy_y = alien.y
-                else:
-                    alien.drop()
+                alien.drop()
 
             for ufo in self.ufos:
                 ufo.draw()
