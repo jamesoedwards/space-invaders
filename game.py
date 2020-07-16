@@ -24,8 +24,9 @@ class Game:
 
         self.width = width
         self.height = height
-        self.screen = pygame.display.set_mode((width, height))
+        self.screen = pygame.display.set_mode((width, height+100))
         self.clock = pygame.time.Clock()
+
         done = False
         alien_speed = 0.05
 
@@ -65,6 +66,7 @@ class Game:
                 newwave = True
 
             if newwave and top_enemy_y > 0.5 * height:
+                self.score += 50
                 alien_speed += 0.01
                 self.wave += 1
                 Generator(self, alien_speed)
@@ -95,6 +97,11 @@ class Game:
                 scoreText.draw()
                 waveText.draw()
 
+            # ground
+            pygame.draw.line(self.screen, (128,128,0), (0,505), (600,505), 5)
+
+        # End: while not done
+
     def gameOver(self):
         print("Game over!")
         self.lost = True
@@ -120,7 +127,7 @@ class Alien:
         self.y += self.speed
 
     def drop(self):
-        if random.random() < 0.001:
+        if random.random() < 0.0001 * self.game.wave:
             self.game.bombs.append(Bomb(self.game, self.x, self.y, 3))
 
     def checkCollision(self, game):
@@ -210,4 +217,4 @@ class WaveText:
         self.game.screen.blit(textsurface, (self.x, self.y))
 
 if __name__ == '__main__':
-    game = Game(600, 400)
+    game = Game(600, 500)
