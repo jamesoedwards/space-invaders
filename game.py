@@ -34,6 +34,7 @@ class Game:
 
         self.lost = False
         self.wave = 1
+        self.alien_direction = 1
         self.lives_count = 3
         self.score = 0
         self.max_ammo = 20
@@ -114,6 +115,9 @@ class Game:
                 elif (alien.y < top_enemy_y):
                     top_enemy_y = alien.y
                 alien.drop()
+                if (alien.x > self.width - 25 or alien.x < 25):
+                    self.alien_direction *= -1
+                    self.shiftAliens()
 
             for ufo in self.ufos:
                 ufo.draw()
@@ -140,6 +144,10 @@ class Game:
 
         # End: while not done
 
+    def shiftAliens(self):
+        for alien in self.aliens:
+            alien.y += 12
+
     def gameOver(self):
         print("Game over!")
         self.lost = True
@@ -164,7 +172,7 @@ class Alien:
 
     def draw(self):
         self.game.screen.blit(alien_gif, (self.x-12, self.y))
-        self.y += self.speed
+        self.x += self.speed * self.game.alien_direction
 
     def drop(self):
         if random.random() < 0.0001 * self.game.wave:
