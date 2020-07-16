@@ -32,7 +32,8 @@ class Game:
         self.screen = pygame.display.set_mode((width, height+100))
         self.clock = pygame.time.Clock()
 
-        alien_speed = 0.05
+        self.wave = 1
+        alien_speed = 0.04 + 0.01 * self.wave
         Generator(self, alien_speed)
 
         hero = Hero(self, width / 2, height - 20)
@@ -48,7 +49,6 @@ class Game:
 
         done = False
         newwave = False
-        self.wave = 1
         waveText = WaveText(self, 500, 10)
         wave_rate = 10000
         timer = 0
