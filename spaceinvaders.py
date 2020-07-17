@@ -1,6 +1,15 @@
 import pygame
 import random
 
+from lib.alien import Alien
+from lib.ammo import Ammo
+from lib.generator import Generator
+from lib.life import Life
+from lib.player import Player
+from lib.screentext import ScoreText, WaveText
+from lib.ufo import Ufo
+from lib.functions import pause, wait
+
 BLACK  = (0,0,0)
 WHITE  = (255,255,255)
 GREEN  = (128,128,0)
@@ -8,26 +17,7 @@ RED    = (255,50,100)
 YELLOW = (255,255,0)
 
 pygame.init()
-player_gif = pygame.image.load("images/player.gif")
-alien_gif  = pygame.image.load("images/invader.gif")
-ammo_gif   = pygame.image.load("images/ammo.gif")
-ufo_gif    = pygame.image.load("images/ufo.gif")
 end_screen = pygame.image.load("images/endscreen.gif")
-
-def pause():
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_p:
-                return
-def wait():
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                return
 
 class Game:
 
@@ -180,183 +170,6 @@ class Game:
         self.screen.blit(textsurface2, (225, 400))
         pygame.display.flip()
         wait()
-
-
-class Alien:
-    def __init__(self, game, x, y, speed):
-        self.x = x
-        self.game = game
-        self.y = y
-        self.speed = speed
-        self.size = 24
-
-    def draw(self):
-        self.game.screen.blit(alien_gif, (self.x-12, self.y))
-        self.x += self.speed * self.game.alien_direction
-
-    def drop(self):
-        if random.random() < 0.0001 * self.game.wave:
-            self.game.bombs.append(Bomb(self.game, self.x, self.y, 3))
-
-    def checkCollision(self, game):
-        for rocket in game.rockets:
-            if (rocket.x < self.x + 0.5*self.size and
-                    rocket.x > self.x - 0.5*self.size and
-                    rocket.y < self.y + 0.5*self.size and
-                    rocket.y > self.y - 0.5*self.size):
-                game.rockets.remove(rocket)
-                game.aliens.remove(self)
-                game.score += 10
-
-
-class Ufo:
-    def __init__(self, game, x, y):
-        self.x = x
-        self.game = game
-        self.y = y
-        self.speed = 1.9 + 0.1 * self.game.wave
-        self.direction = -1
-        self.size = 36
-
-    def draw(self):
-        self.game.screen.blit(ufo_gif, (self.x-18, self.y-8))
-        self.x += self.direction * self.speed
-        if self.x < -self.game.width or self.x > 2 * self.game.width:
-            self.direction *= -1
-
-    def drop(self):
-        if self.x < self.game.width and self.x > 0:
-            if random.random() < 0.009 + 0.001 * self.game.wave:
-                self.game.bombs.append(Bomb(self.game, self.x-2, self.y+2, 5))
-
-    def checkCollision(self, game):
-        for rocket in game.rockets:
-            if (rocket.x < self.x + 0.5*self.size and
-                    rocket.x >= self.x - 0.5*self.size and
-                    rocket.y < self.y + 0.25*self.size and
-                    rocket.y > self.y - 0.25*self.size):
-                game.rockets.remove(rocket)
-                game.ufos.remove(self)
-                game.score += 250
-
-
-class Player:
-    def __init__(self, game, x, y):
-        self.x = x
-        self.game = game
-        self.y = y
-        self.size = 24
-
-    def draw(self):
-        self.game.screen.blit(player_gif, (self.x - 12, self.y))
-
-    def fire(self):
-        if len(self.game.rockets) < self.game.max_ammo:
-            self.game.rockets.append(Rocket(self.game, self.x, self.y + 3))
-
-    def moveLeft(self):
-        self.x -= 2 if self.x > 20 else 0
-
-    def moveRight(self):
-        self.x += 2 if self.x < self.game.width -  20 else 0
-
-    def checkCollision(self, game):
-        for bomb in game.bombs:
-            if (bomb.x < self.x + 0.55*self.size and
-                    bomb.x > self.x - 0.55*self.size and
-                    bomb.y < self.y + 18 + 0.35*self.size and
-                    bomb.y > self.y + 18 - 0.25*self.size):
-                game.bombs.remove(bomb)
-                # lose a life
-                game.lives_count -= 1
-                game.lives.pop()
-
-
-class Life:
-    def __init__(self, game, x, y):
-        self.x = x
-        self.y = y
-        self.game = game
-
-    def draw(self):
-        self.game.screen.blit(player_gif, (self.x, self.y))
-
-
-class Ammo:
-    def __init__(self, game, x, y):
-        self.x = x
-        self.y = y
-        self.game = game
-
-    def draw(self):
-        self.game.screen.blit(ammo_gif, (self.x, self.y))
-        remaining_ammo = self.game.max_ammo - len(self.game.rockets)
-        textsurface = self.game.font.render(str(remaining_ammo), False, WHITE)
-        self.game.screen.blit(textsurface, (self.x + 35, self.y + 10))
-
-
-class Generator:
-    def __init__(self, game, speed):
-        x_margin = 25
-        y_margin = 45
-        height = 40
-        width  = 50
-        for x in range(x_margin, game.width - x_margin, width):
-            if game.alien_direction == -1:
-                x += 50
-            for y in range(y_margin, int(game.height / 2) - y_margin, height):
-                game.aliens.append(Alien(game, x, y, speed))
-
-
-class Bomb:
-    def __init__(self, game, x, y, size):
-        self.x = x
-        self.y = y
-        self.game = game
-        self.size = size
-
-    def draw(self):
-        pygame.draw.rect(self.game.screen,
-                        YELLOW,
-                        pygame.Rect(self.x, self.y, self.size, self.size))
-        self.y += 2
-
-
-class Rocket:
-    def __init__(self, game, x, y):
-        self.x = x
-        self.y = y
-        self.game = game
-
-    def draw(self):
-        pygame.draw.rect(self.game.screen,
-                         RED,
-                         pygame.Rect(self.x, self.y, 2, 4))
-        self.y -= 3
-        if self.y <= 0:
-            self.game.rockets.remove(self)
-
-
-class ScoreText:
-    def __init__(self, game, x, y):
-        self.game = game
-        self.x = x
-        self.y = y
-
-    def draw(self):
-        textsurface = self.game.font.render("Score: %s" % self.game.score, False, WHITE)
-        self.game.screen.blit(textsurface, (self.x, self.y))
-
-
-class WaveText:
-    def __init__(self, game, x, y):
-        self.game = game
-        self.x = x
-        self.y = y
-
-    def draw(self):
-        textsurface = self.game.font.render("Wave: %s" % self.game.wave, False, WHITE)
-        self.game.screen.blit(textsurface, (self.x, self.y))
 
 
 if __name__ == '__main__':
