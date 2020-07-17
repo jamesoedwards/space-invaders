@@ -13,8 +13,6 @@ from lib.functions import pause, wait
 BLACK  = (0,0,0)
 WHITE  = (255,255,255)
 GREEN  = (128,128,0)
-RED    = (255,50,100)
-YELLOW = (255,255,0)
 
 pygame.init()
 end_screen = pygame.image.load("images/endscreen.gif")
@@ -22,31 +20,32 @@ end_screen = pygame.image.load("images/endscreen.gif")
 class Game:
 
     def __init__(self, width, height):
-        self.width = width
+        self.width  = width
         self.height = height
 
         self.player = None
         self.screen = None
-        self.font = None
-        self.clock = None
+        self.font   = None
+        self.clock  = None
 
-        self.aliens = []
-        self.ufos = []
+        self.aliens  = []
+        self.ufos    = []
         self.rockets = []
-        self.bombs = []
-        self.lives = []
+        self.bombs   = []
+        self.lives   = []
 
         self.scoreText = ScoreText(self, 10, 10)
-        self.waveText = WaveText(self, 500, 10)
-        self.ammo = Ammo(self, 515, 525)
+        self.waveText  = WaveText(self, 500, 10)
+        self.ammo      = Ammo(self, 515, 525)
 
-        self.lost = False
-        self.wave = 1
+        self.lost            = False
+        self.newwave         = False
+        self.wave            = 1
         self.alien_direction = random.choice([-1,1])
-        self.lives_count = 3
-        self.score = 0
-        self.max_ammo = 6
-        self.top_enemy_y = 0
+        self.lives_count     = 3
+        self.score           = 0
+        self.max_ammo        = 6
+        self.top_enemy_y     = 0
 
     def run(self):
         pygame.display.set_caption("Space Invaders")
@@ -56,8 +55,8 @@ class Game:
         self.screen = pygame.display.set_mode((self.width, self.height+100))
         self.clock = pygame.time.Clock()
 
-        alien_speed = 0.09 + 0.01 * self.wave
-        Generator(self, alien_speed)
+        self.alien_speed = 0.09 + 0.01 * self.wave
+        Generator(self, self.alien_speed)
 
         self.player = Player(self, self.width / 2, self.height - 20)
         l_x = 30
@@ -67,7 +66,6 @@ class Game:
             l_x += 50
 
         done = False
-        newwave = False
         while not done:
             if self.lives_count == 0:
                 done = True
@@ -76,7 +74,7 @@ class Game:
 
             if len(self.aliens) == 0:
                 self.score += 50
-                newwave = True
+                self.newwave = True
 
             pressed = pygame.key.get_pressed()
             if pressed[pygame.K_LEFT]:
@@ -102,18 +100,18 @@ class Game:
             pygame.display.flip()
             self.clock.tick(60)
             self.screen.fill(BLACK)
-
-            if newwave or self.top_enemy_y > 0.5 * self.height:
-                self.score += 100 * self.wave
-                alien_speed += 0.01
-                self.wave += 1
-                Generator(self, alien_speed)
-                newwave = False
-
-            self.top_enemy_y = self.height
+            self.newWave()
             self.redraw()
-
         # End: while not done
+
+    def newWave(self):
+        if self.newwave or self.top_enemy_y > 0.5 * self.height:
+            self.score += 100 * self.wave
+            self.alien_speed += 0.01
+            self.wave += 1
+            Generator(self, self.alien_speed)
+            self.newwave = False
+        self.top_enemy_y = self.height
 
     def redraw(self):
         for alien in self.aliens:
