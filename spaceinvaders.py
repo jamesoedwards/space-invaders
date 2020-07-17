@@ -1,7 +1,6 @@
 import pygame
 import random
 
-from lib.alien import Alien
 from lib.ammo import Ammo
 from lib.generator import Generator
 from lib.life import Life
