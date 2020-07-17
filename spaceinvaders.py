@@ -14,6 +14,13 @@ ammo_gif   = pygame.image.load("images/ammo.gif")
 ufo_gif    = pygame.image.load("images/ufo.gif")
 end_screen = pygame.image.load("images/endscreen.gif")
 
+def pause():
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_p:
+                return
 def wait():
     while True:
         for event in pygame.event.get():
@@ -53,7 +60,7 @@ class Game:
         self.screen = pygame.display.set_mode((self.width, self.height+100))
         self.clock = pygame.time.Clock()
 
-        alien_speed = 0.04 + 0.01 * self.wave
+        alien_speed = 0.09 + 0.01 * self.wave
         Generator(self, alien_speed)
 
         player = Player(self, self.width / 2, self.height - 20)
@@ -78,7 +85,6 @@ class Game:
 
             if len(self.aliens) == 0:
                 self.score += 50
-                self.rockets = []
                 newwave = True
 
             pressed = pygame.key.get_pressed()
@@ -92,6 +98,11 @@ class Game:
                     done = True
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and not self.lost:
                     player.fire()
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_p:
+                    textsurface = self.font.render("PAUSED", False, WHITE)
+                    self.screen.blit(textsurface, (270, 300))
+                    pygame.display.flip()
+                    pause()
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_q:
                     done = True
                     self.gameOver()
