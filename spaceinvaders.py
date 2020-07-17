@@ -16,7 +16,7 @@ GREEN  = (128,128,0)
 pygame.init()
 end_screen = pygame.image.load("images/endscreen.gif")
 
-class Game:
+class SpaceInvaders:
 
     def __init__(self, width, height):
         self.width  = width
@@ -43,7 +43,7 @@ class Game:
         self.alien_direction = random.choice([-1,1])
         self.lives_count     = 3
         self.score           = 0
-        self.max_ammo        = 6
+        self.max_ammo        = 3
         self.top_enemy_y     = 0
 
     def run(self):
@@ -69,32 +69,14 @@ class Game:
             if self.lives_count == 0:
                 done = True
                 self.gameOver()
-                break
+                return self.score
 
             if len(self.aliens) == 0:
                 self.score += 50
                 self.newwave = True
 
-            pressed = pygame.key.get_pressed()
-            if pressed[pygame.K_LEFT]:
-                self.player.moveLeft()
-            elif pressed[pygame.K_RIGHT]:
-                self.player.moveRight()
-
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    done = True
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and not self.lost:
-                    self.player.fire()
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_p:
-                    textsurface = self.font.render("PAUSED", False, WHITE)
-                    self.screen.blit(textsurface, (270, 300))
-                    pygame.display.flip()
-                    pause()
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_q:
-                    done = True
-                    self.gameOver()
-                    break
+            if self.getInputs():
+                return self.score
 
             pygame.display.flip()
             self.clock.tick(60)
@@ -102,6 +84,29 @@ class Game:
             self.newWave()
             self.redraw()
         # End: while not done
+
+    def getInputs(self):
+        pressed = pygame.key.get_pressed()
+        if pressed[pygame.K_LEFT]:
+            self.player.moveLeft()
+        elif pressed[pygame.K_RIGHT]:
+            self.player.moveRight()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                done = True
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and not self.lost:
+                self.player.fire()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_p:
+                textsurface = self.font.render("PAUSED", False, WHITE)
+                self.screen.blit(textsurface, (270, 300))
+                pygame.display.flip()
+                pause()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_q:
+                done = True
+                self.gameOver()
+                return True
+        return False
 
     def newWave(self):
         if self.newwave or self.top_enemy_y > 0.5 * self.height:
@@ -175,6 +180,7 @@ class Game:
 
 
 if __name__ == '__main__':
-    game = Game(600, 500)
-    game.run()
+    game = SpaceInvaders(600, 500)
+    final_score = game.run()
+    print("Score was: %s" % final_score)
 
