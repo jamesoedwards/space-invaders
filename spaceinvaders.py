@@ -25,6 +25,7 @@ class Game:
         self.width = width
         self.height = height
 
+        self.player = None
         self.screen = None
         self.font = None
         self.clock = None
@@ -35,12 +36,17 @@ class Game:
         self.bombs = []
         self.lives = []
 
+        self.scoreText = ScoreText(self, 10, 10)
+        self.waveText = WaveText(self, 500, 10)
+        self.ammo = Ammo(self, 515, 525)
+
         self.lost = False
         self.wave = 1
         self.alien_direction = random.choice([-1,1])
         self.lives_count = 3
         self.score = 0
         self.max_ammo = 6
+        self.top_enemy_y = 0
 
     def run(self):
         pygame.display.set_caption("Space Invaders")
@@ -53,20 +59,15 @@ class Game:
         alien_speed = 0.09 + 0.01 * self.wave
         Generator(self, alien_speed)
 
-        player = Player(self, self.width / 2, self.height - 20)
+        self.player = Player(self, self.width / 2, self.height - 20)
         l_x = 30
         l_y = 530
         for i in range(self.lives_count):
             self.lives.append(Life(self, l_x, l_y))
             l_x += 50
 
-        scoreText = ScoreText(self, 10, 10)
-        waveText = WaveText(self, 500, 10)
-        ammo = Ammo(self, 515, 525)
-
         done = False
         newwave = False
-        top_enemy_y = 0
         while not done:
             if self.lives_count == 0:
                 done = True
@@ -79,15 +80,15 @@ class Game:
 
             pressed = pygame.key.get_pressed()
             if pressed[pygame.K_LEFT]:
-                player.moveLeft()
+                self.player.moveLeft()
             elif pressed[pygame.K_RIGHT]:
-                player.moveRight()
+                self.player.moveRight()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     done = True
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and not self.lost:
-                    player.fire()
+                    self.player.fire()
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_p:
                     textsurface = self.font.render("PAUSED", False, WHITE)
                     self.screen.blit(textsurface, (270, 300))
@@ -102,57 +103,61 @@ class Game:
             self.clock.tick(60)
             self.screen.fill(BLACK)
 
-            if newwave or top_enemy_y > 0.5 * self.height:
+            if newwave or self.top_enemy_y > 0.5 * self.height:
                 self.score += 100 * self.wave
                 alien_speed += 0.01
                 self.wave += 1
                 Generator(self, alien_speed)
                 newwave = False
 
-            top_enemy_y = self.height
-            for alien in self.aliens:
-                alien.draw()
-                alien.checkCollision(self)
-                if (alien.y > self.height - 24):
-                    done = True
-                    self.gameOver()
-                    break
-                elif (alien.y < top_enemy_y):
-                    top_enemy_y = alien.y
-                alien.drop()
-                if (alien.x > self.width - 25 or alien.x < 25):
-                    self.shiftAliens()
-
-            for ufo in self.ufos:
-                ufo.draw()
-                ufo.checkCollision(self)
-                ufo.drop()
-            if len(self.ufos) == 0:
-                game.ufos.append(Ufo(game, random.choice([-self.width, 2*self.width]), 28))
-
-            for rocket in self.rockets:
-                rocket.draw()
-
-            for bomb in self.bombs:
-                if bomb.y > self.height:
-                    self.score += 1
-                    self.bombs.remove(bomb)
-                else:
-                    bomb.draw()
-
-            if not self.lost: 
-                player.draw()
-                player.checkCollision(self)
-                scoreText.draw()
-                waveText.draw()
-                ammo.draw()
-                for life in self.lives:
-                    life.draw()
-
-            # ground
-            pygame.draw.line(self.screen, GREEN, (0,505), (600,505), 5)
+            self.top_enemy_y = self.height
+            self.redraw()
 
         # End: while not done
+
+    def redraw(self):
+        for alien in self.aliens:
+            alien.draw()
+            alien.checkCollision(self)
+            if (alien.y > self.height - 24):
+                done = True
+                self.gameOver()
+                break
+            elif (alien.y < self.top_enemy_y):
+                self.top_enemy_y = alien.y
+            alien.drop()
+            if (alien.x > self.width - 25 or alien.x < 25):
+                self.shiftAliens()
+
+        for ufo in self.ufos:
+            ufo.draw()
+            ufo.checkCollision(self)
+            ufo.drop()
+        if len(self.ufos) == 0:
+            game.ufos.append(Ufo(game, random.choice([-self.width, 2*self.width]), 28))
+
+        for rocket in self.rockets:
+            rocket.draw()
+
+        for bomb in self.bombs:
+            if bomb.y > self.height:
+                self.score += 1
+                self.bombs.remove(bomb)
+            else:
+                bomb.draw()
+
+        if not self.lost: 
+            self.player.draw()
+            self.player.checkCollision(self)
+            self.scoreText.draw()
+            self.waveText.draw()
+            self.ammo.draw()
+            for life in self.lives:
+                life.draw()
+
+        # ground
+        pygame.draw.line(self.screen, GREEN, (0,505), (600,505), 5)
+
 
     def shiftAliens(self):
         self.alien_direction *= -1
