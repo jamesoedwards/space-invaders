@@ -17,10 +17,10 @@ class Bomb:
 
     def checkCollision(self, game):
         for rocket in game.rockets:
-            if (rocket.x <= self.x + 0.5*self.size and
-                    rocket.x >= self.x - 0.5*self.size and
-                    rocket.y <= self.y + 0.5*self.size and
-                    rocket.y >= self.y - 0.5*self.size):
+            if (rocket.x <= self.x + self.size and
+                    rocket.x >= self.x and
+                    rocket.y <= self.y + self.size and
+                    rocket.y >= self.y):
                 game.rockets.remove(rocket)
                 game.bombs.remove(self)
-                game.score += 25
+                game.score += 25 * (6 - self.size)
