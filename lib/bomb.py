@@ -14,3 +14,13 @@ class Bomb:
                         YELLOW,
                         pygame.Rect(self.x, self.y, self.size, self.size))
         self.y += 2
+
+    def checkCollision(self, game):
+        for rocket in game.rockets:
+            if (rocket.x <= self.x + 0.5*self.size and
+                    rocket.x >= self.x - 0.5*self.size and
+                    rocket.y <= self.y + 0.5*self.size and
+                    rocket.y >= self.y - 0.5*self.size):
+                game.rockets.remove(rocket)
+                game.bombs.remove(self)
+                game.score += 25

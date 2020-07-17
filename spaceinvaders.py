@@ -137,6 +137,7 @@ class Game:
             rocket.draw()
 
         for bomb in self.bombs:
+            bomb.checkCollision(self)
             if bomb.y > self.height:
                 self.score += 1
                 self.bombs.remove(bomb)
