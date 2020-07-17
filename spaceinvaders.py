@@ -155,7 +155,6 @@ class Game:
         # ground
         pygame.draw.line(self.screen, GREEN, (0,505), (600,505), 5)
 
-
     def shiftAliens(self):
         self.alien_direction *= -1
         for alien in self.aliens:
