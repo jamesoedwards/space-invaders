@@ -8,7 +8,7 @@ class Ufo:
         self.x = x
         self.game = game
         self.y = y
-        self.speed = 1.9 + 0.1 * self.game.wave
+        self.speed = 1.9 + 0.025 * self.game.wave
         self.direction = -1
         self.size = 36
 

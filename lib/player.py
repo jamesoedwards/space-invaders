@@ -9,9 +9,23 @@ class Player:
         self.game = game
         self.y = y
         self.size = 24
+        self.hit = False
+        self.hit_iter = 0
 
     def draw(self):
-        self.game.screen.blit(player_gif, (self.x - 12, self.y))
+        if not self.hit:
+            self.game.screen.blit(player_gif, (self.x - 12, self.y))
+        else:
+            if self.hit_iter == 24:
+                self.game.screen.blit(player_gif, (self.x - 12, self.y))
+                self.hit_iter = 0
+                self.hit = False
+            elif self.hit_iter % 6 in [0,1,2]:
+                self.game.screen.blit(player_gif, (self.x - 12, self.y))
+                self.hit_iter += 1
+            else:
+                self.hit_iter += 1
+
 
     def fire(self):
         if len(self.game.rockets) < self.game.max_ammo:
@@ -33,3 +47,4 @@ class Player:
                 # lose a life
                 game.lives_count -= 1
                 game.lives.pop()
+                self.hit = True
