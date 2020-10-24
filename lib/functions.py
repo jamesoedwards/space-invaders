@@ -14,4 +14,5 @@ def wait():
             if event.type == pygame.QUIT:
                 pygame.quit()
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                pygame.quit()
                 return
